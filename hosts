@@ -1,0 +1,10 @@
+[linux_servers]
+maid ansible_host=192.168.x.x
+
+
+[linux_servers:vars]
+ansible_ssh_user=maid
+ansible_ssh_pass=Welkom01!
+ansible_ssh_port=22
+ansible_connection=ssh
+ansible_ssh_private_key_file=/home/maid/.ssh/id_rsa
