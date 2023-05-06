@@ -1,14 +1,15 @@
 ---
-- hosts: all
+- hosts: linux_servers
   become: true
 
+  #! Handler voor de restart van de sshd service.
   handlers:
-    - name: restart ssh
+    - name: Restart SSH service.
       service: name=sshd state=restarted
 
   tasks:
-    # Use secure and encrypted communication.
-    - name: Allow sshd to listen on tcp port 2849.
+    #! Verander de ssh port.
+    - name: Allow SSH to listen on port 2849.
       seport:
         ports: 2849
         proto: tcp
@@ -16,12 +17,14 @@
         state: present
       when: ansible_selinux.status == 'enabled'
 
-    - name: Update SSH configuration to be more secure.
+    #! Verander essentiele sshd configuratie.
+    - name: Update SSH configuration file for more security.
       lineinfile:
         dest: /etc/ssh/sshd_config
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"
         state: present
+        # checks if the sshd_config file is valid.
         validate: 'sshd -t -f %s'
       with_items:
         - regexp: "^PasswordAuthentication"
@@ -30,31 +33,37 @@
           line: "PermitRootLogin no"
         - regexp: "^Port"
           line: "Port 2849"
+      #! Handler wordt aangeroepen.
       notify: restart ssh
 
-    # User account configuration.
-    - name: Add a deployment user.
+    #! UserAccount configurations.
+    - name: Add a new user.
       user:
         name: johndoe
+        comment: John Doe
+        password: "{{ 'password' | password_hash('sha512') }}"
+        shell: /bin/bash
+        createhome: yes
         state: present
 
-    # Disable root login and use `sudo`.
-    - name: Add sudo rights for deployment user.
+    #! Disable root login and use `sudo`.
+    - name: Make the user a sudoer.
       lineinfile:
         dest: /etc/sudoers
         regexp: '^johndoe'
         line: 'johndoe ALL=(ALL) NOPASSWD: ALL'
         state: present
+        # checks if the sudoers file is valid.
         validate: 'visudo -cf %s'
 
-    # Remove unused software, open only required ports.
+    #! Remove unused software.
     - name: Remove unused packages.
       package:
         name:
           - telnet
         state: absent
 
-    # File permissions.
+    #! File permissions.
     - name: Configure the permissions for the messages log.
       file:
         path: /var/log/messages
@@ -62,7 +71,7 @@
         group: root
         mode: 0600
 
-# Automating updates for Debian systems.
+    #! Install and configure auto upgrades in debian.
     - name: Install unattended upgrades package.
       apt:
         name: unattended-upgrades
@@ -81,24 +90,7 @@
         - 50unattended-upgrades
       when: ansible_os_family == 'Debian'
 
-    # Configuring a firewall with `firewalld` on RHEL.
-    - name: Ensure firewalld is running.
-      service:
-        name: firewalld
-        state: started
-
-    - name: Configure open ports with firewalld.
-      firewalld:
-        state: "{{ item.state }}"
-        port: "{{ item.port }}"
-        zone: external
-        immediate: yes
-        permanent: yes
-      with_items:
-        - { state: 'enabled', port: '22/tcp' }
-        - { state: 'enabled', port: '80/tcp' }
-        - { state: 'enabled', port: '123/udp' }
-
+    #! Install and configure fail2ban.
     - name: Install fail2ban (Debian).
       apt:
         name: fail2ban
@@ -111,7 +103,7 @@
         state: started
         enabled: yes
 
-    # Use SELinux (Security-Enhanced Linux).
+    #! Use SELinux (Security-Enhanced Linux).
     - name: Install Python SELinux library.
       dnf:
         name: python3-libselinux
