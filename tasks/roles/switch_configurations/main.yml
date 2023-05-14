@@ -1,2 +1,64 @@
 ---
-    - name: "Configuring a Cisco switch"
+- name: "Configureer een Cisco Switch"
+  hosts: SW1
+  gather_facts: no
+  become: yes
+  connection: network_cli
+  tasks:
+    - name: "Configureer banner"
+      ios_banner:
+        banner: login
+        text: "{{ banner }}"
+        state: present
+
+    - name: "Hostname configuration"
+      ios_config:
+        lines:
+          - hostname {{ inventory_hostname }}
+
+    - name: "Maak VLANs"
+      cisco.ios.ios_vlans:
+        config:
+          - vlan_id: "{{ item.id }}"
+            name: "{{ item.name }}"
+      with_items:
+        - { id: 99, name: "Management" }
+        - { id: 50, name: "Data" }
+        - { id: 80, name: "Printer" }
+        - { id: 90, name: "Beveiliging" }
+
+    - name: "Configure access ports"
+      ios_config:
+        parents: "Interface {{ item.interface }}"
+        lines:
+          - switchport mode {{ item.mode }}
+          - switchport {{ item.mode }} vlan {{ item.vlan }}
+          - description {{ item.desc }}
+      with_items:
+        - { interface: "FastEthernet0/1", mode: "access", vlan: "50", desc: "Werkstation" }
+        - { interface: "FastEthernet0/2", mode: "access", vlan: "50", desc: "Werkstation" }
+        - { interface: "FastEthernet0/3", mode: "access", vlan: "80", desc: "Printer" }
+        - { interface: "FastEthernet0/4", mode: "access", vlan: "80", desc: "Printer" }
+        - { interface: "FastEthernet0/5", mode: "access", vlan: "90", desc: "Camera" }
+        - { interface: "FastEthernet0/6", mode: "access", vlan: "90", desc: "Camera" }   
+
+    - name : "Configure trunk port"  
+      ios_config:
+        parents: "Interface {{ item.interface}}"   
+        lines:
+          - switchport mode {{ item.mode }}
+          - switchport {{ item.mode }} allowed vlan {{ item.vlans }}
+          - switchport {{ item.mode }} native vlan {{ item.native }}
+          - description {{ item.desc }}
+      with_items: 
+      - { interface: "GigabitEthernet0/1", mode: "trunk", vlans: "50,80,90", desc: "Uplink", native: 99}
+
+    - name: "Shutdown interfaces"
+      ios_config:
+        parents: "Interface {{ item.interface }}"
+        lines:
+          - shutdown
+          - description {{ item.desc }}
+      with_items:
+        - { interface: "FastEthernet0/7", desc: "Uitgeschakeld" } 
+        - { interface: "FastEthernet0/8", desc: "Uitgeschakeld" }
