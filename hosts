@@ -8,3 +8,26 @@ ansible_ssh_pass=Welkom01!
 ansible_ssh_port=22
 ansible_connection=ssh
 ansible_ssh_private_key_file=/home/maid/.ssh/id_rsa
+
+
+[Switches]
+maid ansible_host=192.168.x.x
+
+[Switches:vars]
+ansible_connection=network_cli
+ansible_ssh_user=maid
+ansible_ssh_pass=Welkom01!
+ansible_ssh_port=22
+ansible_network_os=ios
+ansible_python_interpreter=/usr/bin/python3
+
+[Routers]
+maid ansible_host=192.168.x.x
+
+[Routers:vars]
+ansible_connection=network_cli
+ansible_ssh_user=maid
+ansible_ssh_pass=Welkom01!
+ansible_ssh_port=22
+ansible_network_os=ios
+ansible_python_interpreter=/usr/bin/python3
