@@ -1,0 +1,65 @@
+---
+- name: "Configureren van een router."
+  hosts: routers
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: "Veranderen van hostname"
+      ios_config:
+        lines:
+          - "hostname {{ inventory_hostname }}"
+
+    - name: "Veranderen van domain-name"
+      ios_config:
+        lines:
+          - "ip domain-name maid.intern"
+
+    - name: "Configuren van int gi 1."
+      ios_config:
+      parents: "interface GigabitEthernet1"
+        lines:
+          - "interface GigabitEthernet1"
+          - "ip address {{ GI1_ip }} {{ GI1_mask }}"
+          - "ip ospf authentication-key 7 Welkom01"
+          - "no shutdown"
+
+    - name: "Configuren van int gi 2."
+      ios_config:
+      parents: "interface GigabitEthernet2"
+        lines:
+          - "interface GigabitEthernet2"
+          - "ip address {{ GI2_ip }} {{ GI2_mask }}"
+          - "no shutdown"
+          - "ip ospf authentication-key 7 Welkom01"
+
+    - name: "Veranderen van banner"
+      ios_config:
+        lines:
+          - "banner motd ^C"
+          - "*********************************************"
+          - "*****  Welcome to the MAID network!  ********"
+          - "*********************************************"
+          - "^C"
+
+    - name: "Het maken van een DHCP pool."
+      ios_config:
+      parents: "ip dhcp pool LAN"
+        lines:
+          - "network {{ GI1_network }}"
+          - "default-router {{ GI1_ip }}"
+          - "dns-server 1.1.1.1"
+          - "domain-name maid.intern"
+
+    - name: "OSPF configureren"
+      ios_config:
+      parents: "router ospf 1"
+        lines:
+          - "netw {{ GI1_network }} {{ GI1_wildcard }} area 0"
+          - "netw {{ GI2_network }} {{ GI2_wildcard }} area 0"
+
+    - name: "Back-up for the routers"
+      ios_config:
+        backup: yes
+        backup_options:
+          dir_path: $PWD/backup
+
