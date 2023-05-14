@@ -1,0 +1,16 @@
+ansible_host: 192.168.0.0
+
+# GigabitEthernet1
+GI1_ip: 192.168.0.0  
+GI1_subnetmask: 255.255.255.0
+GI1_network: 192.168.0.0
+GI1_wildcard: 0.0.0.255
+
+# GigabitEthernet2
+GI2_ip: 192.168.0.0  
+GI2_subnetmask: 255.255.255.0
+GI2_network: 192.168.0.0
+GI2_wildcard: 0.0.0.255
+
+
+ospf_priority: 200
