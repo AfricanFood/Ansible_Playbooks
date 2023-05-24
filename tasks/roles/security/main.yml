@@ -24,7 +24,7 @@
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"
         state: present
-        # checks if the sshd_config file is valid.
+        #! kijkt of er geen fouten zijn in de ssh configuratie file.
         validate: 'sshd -t -f %s'
       with_items:
         - regexp: "^PasswordAuthentication"
@@ -36,7 +36,7 @@
       #! Handler wordt aangeroepen.
       notify: restart ssh
 
-    #! UserAccount configurations.
+    #! User Account configurations.
     - name: Add a new user.
       user:
         name: johndoe
@@ -53,17 +53,17 @@
         regexp: '^johndoe'
         line: 'johndoe ALL=(ALL) NOPASSWD: ALL'
         state: present
-        # checks if the sudoers file is valid.
+        # kijkt of er geen fouten zijn in de sudoers file.
         validate: 'visudo -cf %s'
 
-    #! Remove unused software.
+    #! Verwijder ongebruikte packages.
     - name: Remove unused packages.
       package:
         name:
           - telnet
         state: absent
 
-    #! File permissions.
+    #! Verander file permission van de log file.
     - name: Configure the permissions for the messages log.
       file:
         path: /var/log/messages
@@ -71,7 +71,7 @@
         group: root
         mode: 0600
 
-    #! Install and configure auto upgrades in debian.
+    #! Installeer + configureer auto updates.
     - name: Install unattended upgrades package.
       apt:
         name: unattended-upgrades
@@ -90,7 +90,7 @@
         - 50unattended-upgrades
       when: ansible_os_family == 'Debian'
 
-    #! Install and configure fail2ban.
+    #! Installeer en configureer fail2ban.
     - name: Install fail2ban (Debian).
       apt:
         name: fail2ban
@@ -103,7 +103,7 @@
         state: started
         enabled: yes
 
-    #! Use SELinux (Security-Enhanced Linux).
+    #! SELinux.
     - name: Install Python SELinux library.
       dnf:
         name: python3-libselinux
